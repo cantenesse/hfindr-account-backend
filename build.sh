@@ -33,21 +33,35 @@ database_up () {
   echo "database started, listing on 3306"
 }
 
+database_create () {
+  docker run --rm --network=devnet mysql:8.0 mysql -u root --password=$MYSQL_ROOT_PASSWORD -h 10.10.10.10 -e "create database account; use account; CREATE USER 'account'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD'; GRANT ALL ON account.* TO 'account'@'localhost';"
+}
+
 database_migrate () {
   echo "Migrating database"
   docker run --rm --network=devnet -v $(pwd)/ops/database:/flyway/sql flyway/flyway -url=jdbc:mysql://10.10.10.10:3306 -schemas=account_v${version} -user=root -password=$MYSQL_ROOT_PASSWORD migrate
-} 
+}
+
+database_login() {
+  echo "Logging into database"
+  docker run -i -t --network=devnet mysql:8.0 mysql -u root --password=$MYSQL_ROOT_PASSWORD -h 10.10.10.10
+}
 
 if [[ $environment == "dev" ]];then
   if [[ $action == "up" ]];then
     network_up
     database_up
+    database_create
     database_migrate
   fi
 
   if [[ $action == "clean" ]];then
     database_clean
     network_clean
+  fi
+
+  if [[ "$action" == "database_login" ]];then
+    database_login
   fi
 fi
 

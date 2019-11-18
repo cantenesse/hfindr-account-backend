@@ -1,3 +1,4 @@
+use account;
 create table ACCOUNT (
     EMAIL varchar(100) not null,
     FIRST_NAME varchar(100) not null,
