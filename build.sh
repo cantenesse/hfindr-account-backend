@@ -5,6 +5,7 @@ action=$2
 version=$(cat VERSION)
 
 MYSQL_ROOT_PASSWORD=hfindr
+MYSQL_HOST=10.10.10.10
 
 # lib
 database_clean () {
@@ -28,13 +29,13 @@ network_up () {
 
 database_up () {
   echo "starting database"
-  docker run -p 3306:3306 --name account-mysql --network=devnet --ip=10.10.10.10 -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD -d mysql:8.0
+  docker run -p 3306:3306 --name account-mysql --network=devnet --ip=${MYSQL_HOST} -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD -d mysql:8.0
   sleep 20
   echo "database started, listing on 3306"
 }
 
 database_create () {
-  docker run --rm --network=devnet mysql:8.0 mysql -u root --password=$MYSQL_ROOT_PASSWORD -h 10.10.10.10 -e "create database account; use account; CREATE USER 'account'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD'; GRANT ALL ON account.* TO 'account'@'localhost';"
+  docker run --rm --network=devnet mysql:8.0 mysql -u root --password=$MYSQL_ROOT_PASSWORD -h ${MYSQL_HOST} -e "create database account; use account; CREATE USER 'account'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD'; GRANT ALL ON account.* TO 'account'@'localhost';  CREATE USER 'account'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD'; GRANT ALL ON account.* TO 'account'@'%'; flush privileges"
 }
 
 database_migrate () {
